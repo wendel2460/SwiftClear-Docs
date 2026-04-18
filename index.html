@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftClear: Automated Web-Based Student Clearance System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        // Custom Tailwind Configuration for CHMSU Colors
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        chmsu: {
+                            green: '#0C5E33',    // Dark Forest Green
+                            lightGreen: '#128C4B',
+                            gold: '#FFC72C',     // Golden Yellow
+                            lightGold: '#FFD659',
+                            dark: '#1F2937',
+                            light: '#F3F4F6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+        
+        /* Smooth Fade-in Animation for Sections */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0C5E33; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #128C4B; }
+
+        /* Timeline Styles */
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.75rem;
+            top: 0.25rem;
+            height: 1rem;
+            width: 1rem;
+            border-radius: 50%;
+            background-color: #FFC72C;
+            border: 3px solid #0C5E33;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -1.31rem;
+            top: 1.5rem;
+            bottom: -2rem;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+        .timeline-item:last-child::after { display: none; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <div class="md:hidden fixed w-full bg-chmsu-green text-white z-50 flex justify-between items-center p-4 shadow-md">
+        <div class="flex items-center gap-2 font-bold text-lg">
+            <i class="fa-solid fa-graduation-cap text-chmsu-gold"></i> SwiftClear
+        </div>
+        <button onclick="toggleMobileMenu()" class="text-white hover:text-chmsu-gold focus:outline-none">
+            <i class="fa-solid fa-bars text-2xl"></i>
+        </button>
+    </div>
+
+    <aside id="sidebar" class="bg-chmsu-green text-white w-72 flex-shrink-0 h-full flex flex-col transition-transform duration-300 transform -translate-x-full md:translate-x-0 fixed md:relative z-40">
+        
+        <div class="p-6 border-b border-white/20">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="bg-white p-2 rounded-full shadow-lg">
+                    <i class="fa-solid fa-graduation-cap text-chmsu-green text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-chmsu-gold leading-tight">SwiftClear</h1>
+            </div>
+            <p class="text-xs text-green-100 mt-2 opacity-90">Automated Web-Based Student Clearance System for CHMSU Talisay Campus</p>
+        </div>
+
+        <div class="bg-chmsu-lightGreen/50 p-4 m-4 rounded-xl shadow-inner border border-white/10">
+            <p class="text-xs text-chmsu-gold font-semibold uppercase tracking-wider mb-1">Prepared By</p>
+            <p class="font-medium text-sm">Flores, Wendel N.</p>
+            <p class="font-medium text-sm">Rojas, Earl Ritche T.</p>
+            <p class="font-medium text-sm">Jabuhat, Al Clent N.</p>
+            <p class="text-xs text-green-100 mt-1">BSIS 2-B</p>
+            <p class="text-xs text-green-100"><i class="fa-regular fa-calendar text-chmsu-gold mr-1"></i> May, 2026</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2" id="nav-menu">
+            </nav>
+        
+        <div class="p-4 border-t border-white/20 text-center text-xs text-green-200">
+            &copy; 2026 CHMSU Systems Project
+        </div>
+    </aside>
+
+    <main class="flex-1 bg-gray-50 h-full overflow-y-auto w-full pt-16 md:pt-0">
+        <div class="max-w-4xl mx-auto p-6 md:p-10" id="content-container">
+            </div>
+    </main>
+
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden" onclick="toggleMobileMenu()"></div>
+
+    <script>
+        // --- Data Structure containing all document sections ---
+        const documentSections = [
+            {
+                id: 'cover',
+                title: 'Cover Page',
+                icon: 'fa-solid fa-home',
+                content: `
+                    <div class="flex flex-col items-center justify-center text-center min-h-[70vh] fade-in">
+                        <div class="w-24 h-24 bg-chmsu-green rounded-full flex items-center justify-center shadow-xl mb-6">
+                            <i class="fa-solid fa-check-double text-chmsu-gold text-4xl"></i>
+                        </div>
+                        <h1 class="text-4xl md:text-5xl font-bold text-chmsu-green mb-4">SwiftClear</h1>
+                        <h2 class="text-xl md:text-2xl font-medium text-gray-700 mb-8 max-w-2xl">An Automated Web-Based Student Clearance System for CHMSU Talisay Campus</h2>
+                        
+                        <div class="bg-white p-8 rounded-2xl shadow-md border border-gray-100 w-full max-w-lg">
+                            <h3 class="text-sm uppercase tracking-widest text-gray-400 font-semibold mb-6 border-b pb-2">Course Endterm Project</h3>
+                            <div class="grid grid-cols-2 gap-y-4 text-left text-sm">
+                                <div class="text-gray-500">Presented To:</div>
+                                <div class="font-medium text-gray-800">Sir Charwin Padilla</div>
+                                
+                                <div class="text-gray-500">Course:</div>
+                                <div class="font-medium text-gray-800">System Analysis and Design</div>
+                                
+                                <div class="text-gray-500">Proponents:</div>
+                                <div class="font-medium text-gray-800 text-chmsu-green">
+                                    Flores, Wendel N.<br>
+                                    Rojas, Earl Ritche T.<br>
+                                    Jabuhat, Al Clent N.
+                                </div>
+                                
+                                <div class="text-gray-500">Year/Section:</div>
+                                <div class="font-medium text-gray-800">BSIS 2 – B</div>
+                                
+                                <div class="text-gray-500">Date:</div>
+                                <div class="font-medium text-gray-800">May, 2026</div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="switchSection('introduction')" class="mt-10 px-8 py-3 bg-chmsu-gold text-chmsu-dark font-semibold rounded-full shadow-lg hover:bg-yellow-400 hover:scale-105 transition-all flex items-center gap-2">
+                            Begin Reading <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'introduction',
+                title: 'Introduction',
+                icon: 'fa-solid fa-book-open',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">Chapter I: Introduction</h2>
+                        </div>
+                        
+                        <div class="space-y-6 text-gray-600 leading-relaxed text-lg bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <p><span class="text-4xl font-bold text-chmsu-green float-left mr-2 mt-[-8px]">T</span>he rapid advancement of information technology has significantly transformed administrative processes in higher education institutions, particularly in the automation of student services such as clearance systems. Traditionally, student clearance procedures are conducted manually, requiring students to physically visit multiple offices to secure signatures and complete requirements. However, recent studies highlight a growing trend toward the adoption of web-based and automated clearance systems to improve efficiency, accessibility, and data management.</p>
+                            
+                            <p>According to Cadiz et al. (2017), electronic clearance systems streamline the processing of student requirements, reduce costs associated with paper-based transactions, and enable centralized data handling. Similarly, Macuroy et al. (2023) emphasized that online student clearance systems provide faster and more accessible services while improving system reliability and usability. Furthermore, Essel et al. (2023) noted that manual clearance processes impose administrative burdens due to repetitive and time-consuming tasks. Hasan et al. (2023) also identified that digital platforms eliminate long queues and reduce physical congestion within campuses, while Adegoke and Olalekan (2026) highlighted the importance of workflow-driven systems in integrating multiple departments for real-time tracking of clearance status.</p>
+                            
+                            <p>These studies demonstrate that modern clearance systems are shifting toward automated, centralized, and web-based solutions to enhance operational efficiency and user experience. Despite these advancements, many institutions, including Carlos Hilado Memorial State University (CHMSU) Talisay Campus, still experience several challenges associated with traditional clearance systems.</p>
+                            
+                            <div class="bg-orange-50 p-6 rounded-xl border-l-4 border-orange-500 my-8">
+                                <h4 class="text-orange-800 font-semibold mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation"></i> 1.1 Problem Statement</h4>
+                                <p class="text-orange-900 text-base mb-3">The study identified several issues in the current student clearance process at CHMSU Talisay Campus:</p>
+                                <ul class="list-disc list-inside text-orange-900 text-sm space-y-2">
+                                    <li>The manual process requires students to physically move from one office to another, resulting in long queues and time-consuming procedures.</li>
+                                    <li>Paper-based clearance forms are prone to loss, damage, or misplacement, which can delay processing.</li>
+                                    <li>The availability of signatories often causes scheduling conflicts, forcing students to return multiple times.</li>
+                                    <li>The lack of centralized monitoring makes it difficult to track clearance progress in real time.</li>
+                                    <li>Manual systems increase administrative workload and are susceptible to human errors, inefficiencies, and inconsistencies.</li>
+                                </ul>
+                            </div>
+                            
+                            <p>To address these challenges, this study proposes the development of <strong>SwiftClear: An Automated Web-Based Student Clearance System for CHMSU Talisay Campus</strong>, designed to streamline and digitize the entire clearance process. The system integrates key university offices, including the Registrar, Business Office, Library, and College Dean, into a centralized platform that enables real-time monitoring, automated workflow routing, and secure data management. By eliminating the need for physical forms and manual routing, the proposed system reduces processing time, minimizes errors, and enhances accessibility for both students and administrators.</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'objectives',
+                title: 'Objectives',
+                icon: 'fa-solid fa-bullseye',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">1.2 Objectives of the Study</h2>
+                        </div>
+                        
+                        <div class="bg-chmsu-green text-white p-8 rounded-2xl shadow-lg mb-8 relative overflow-hidden">
+                            <div class="absolute -right-10 -top-10 opacity-10">
+                                <i class="fa-solid fa-rocket text-[150px]"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-3 text-chmsu-gold">General Objective</h3>
+                            <p class="text-lg leading-relaxed relative z-10">The general objective of this study is to design and develop <strong>SwiftClear: An Automated Web-Based Student Clearance System for CHMSU Talisay Campus</strong> to improve the efficiency, accessibility, and overall management of the student clearance process.</p>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6">Specifically, this study aims to:</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-start gap-4">
+                                <div class="bg-blue-100 p-3 rounded-lg text-blue-600">
+                                    <i class="fa-solid fa-laptop-code text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Paperless Processing</h4>
+                                    <p class="text-sm text-gray-600">To develop a web-based clearance system that eliminates the need for physical paper forms in processing student clearance.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-start gap-4">
+                                <div class="bg-purple-100 p-3 rounded-lg text-purple-600">
+                                    <i class="fa-solid fa-network-wired text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Centralized Platform</h4>
+                                    <p class="text-sm text-gray-600">To create a centralized platform that connects the Registrar, Business Office, Library, and College Dean for streamlined clearance processing.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-start gap-4">
+                                <div class="bg-green-100 p-3 rounded-lg text-green-600">
+                                    <i class="fa-solid fa-chart-line text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Real-Time Monitoring</h4>
+                                    <p class="text-sm text-gray-600">To enable real-time monitoring of clearance status for both students and authorized personnel.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-start gap-4">
+                                <div class="bg-orange-100 p-3 rounded-lg text-orange-600">
+                                    <i class="fa-solid fa-route text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Automated Routing</h4>
+                                    <p class="text-sm text-gray-600">To automate the routing of clearance requests across different departments to reduce delays and manual processing.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-start gap-4 md:col-span-2">
+                                <div class="bg-red-100 p-3 rounded-lg text-red-600">
+                                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Secure Management</h4>
+                                    <p class="text-sm text-gray-600">To ensure the security and proper management of student records through controlled system access.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'scope',
+                title: 'Scope & Limitations',
+                icon: 'fa-solid fa-border-all',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">1.3 Scope and Limitations</h2>
+                        </div>
+                        
+                        <div class="flex flex-col gap-8">
+                            <div class="bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden">
+                                <div class="bg-chmsu-green text-white p-4 font-semibold text-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-compress text-chmsu-gold"></i> Scope of the Study
+                                </div>
+                                <div class="p-6 space-y-4 text-gray-600">
+                                    <p>This study focuses on the design and development of SwiftClear: An Automated Web-Based Student Clearance System for CHMSU Talisay Campus. The system is intended to streamline the clearance process by providing a centralized digital platform for students and authorized university personnel.</p>
+                                    <p>The system is designed specifically for enrolled and graduating students of CHMSU Talisay Campus who need to process their clearance, as well as authorized staff from key offices including the Registrar, Business Office, Library, and College Dean. It enables users to request, process, and monitor clearance status through an online platform without the use of physical paper forms.</p>
+                                    <p>The developed system includes core functionalities such as user login and authentication, clearance request initiation, automated routing of clearance to different departments, real-time status tracking, and digital approval from each office. It also provides role-based access to ensure that only authorized personnel can approve or manage clearance requests.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+                                <div class="bg-red-50 text-red-800 p-4 font-semibold text-lg flex items-center gap-2 border-b border-red-100">
+                                    <i class="fa-solid fa-ban text-red-500"></i> Limitations of the Study
+                                </div>
+                                <div class="p-6">
+                                    <p class="text-sm text-gray-500 mb-6 italic">Despite its advantages, the system has certain limitations:</p>
+                                    
+                                    <ul class="space-y-4">
+                                        <li class="flex gap-3 items-start">
+                                            <i class="fa-regular fa-circle-xmark text-red-400 mt-1"></i>
+                                            <div>
+                                                <strong class="text-gray-800 block text-sm">Campus Focus</strong>
+                                                <span class="text-sm text-gray-600">The system is limited only to the CHMSU Talisay Campus and does not cover other campuses of the university.</span>
+                                            </div>
+                                        </li>
+                                        <li class="flex gap-3 items-start">
+                                            <i class="fa-regular fa-circle-xmark text-red-400 mt-1"></i>
+                                            <div>
+                                                <strong class="text-gray-800 block text-sm">Platform Dependency</strong>
+                                                <span class="text-sm text-gray-600">It is a web-based application that requires a stable internet connection. The system is also not developed as a mobile application and can only be accessed through web browsers.</span>
+                                            </div>
+                                        </li>
+                                        <li class="flex gap-3 items-start">
+                                            <i class="fa-regular fa-circle-xmark text-red-400 mt-1"></i>
+                                            <div>
+                                                <strong class="text-gray-800 block text-sm">No Online Payments</strong>
+                                                <span class="text-sm text-gray-600">The system does not support online payment transactions; it only allows the Business Office to verify whether students have settled their financial obligations.</span>
+                                            </div>
+                                        </li>
+                                        <li class="flex gap-3 items-start">
+                                            <i class="fa-regular fa-circle-xmark text-red-400 mt-1"></i>
+                                            <div>
+                                                <strong class="text-gray-800 block text-sm">No Other Systems Integration</strong>
+                                                <span class="text-sm text-gray-600">The system’s functionality is limited to the clearance process and does not integrate with other university systems such as enrollment or grading systems. Any data entered into the system depends on the accuracy of the users, and errors may occur if incorrect information is provided.</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'diagram',
+                title: 'System Architecture',
+                icon: 'fa-solid fa-sitemap',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">System Architecture Diagrams</h2>
+                        </div>
+                        
+                        <p class="text-gray-600 text-lg mb-6">The Data Flow Diagram (DFD) and Context Diagram illustrate how data is processed and transferred within the SwiftClear system.</p>
+                        
+                        <div class="bg-white p-4 rounded-2xl shadow-lg border border-gray-200 mb-8">
+                            <h3 class="text-xl font-bold text-chmsu-green mb-4 border-b pb-2">3.2 Context Diagram</h3>
+                            <div class="w-full overflow-hidden rounded-xl bg-gray-100 flex items-center justify-center min-h-[400px] border border-gray-200 mb-4">
+                                <img src="SwiftClear Context Diagram.png" alt="Context Diagram for SwiftClear" class="w-full h-auto object-contain max-h-[800px]" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'text-center p-10\\'><i class=\\'fa-solid fa-image text-gray-300 text-6xl mb-4\\'></i><p class=\\'text-gray-500\\'>Context Diagram <br>Ensure SwiftClear Context Diagram.png is in the same folder.</p></div>'">
+                            </div>
+                            <p class="text-sm text-gray-600">The Context Diagram illustrates SwiftClear as Process 0, functioning as the central system. It manages interactions between the <strong>Student</strong> (submitting credentials and requests) and the <strong>Clearance Departments</strong> (reviewing requests and sending back approvals/status updates).</p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-2xl shadow-lg border border-gray-200">
+                            <h3 class="text-xl font-bold text-chmsu-green mb-4 border-b pb-2">3.3 Data Flow Diagram</h3>
+                            <div class="w-full overflow-hidden rounded-xl bg-gray-100 flex items-center justify-center min-h-[400px] border border-gray-200 mb-4">
+                                <img src="SwiftClear Data Flow Diagram.png" alt="Data Flow Diagram for SwiftClear" class="w-full h-auto object-contain max-h-[800px]" onerror="this.onerror=null; this.parentNode.innerHTML='<div class=\\'text-center p-10\\'><i class=\\'fa-solid fa-image text-gray-300 text-6xl mb-4\\'></i><p class=\\'text-gray-500\\'>Data Flow Diagram <br>Ensure SwiftClear Data Flow Diagram.png is in the same folder.</p></div>'">
+                            </div>
+                            <div class="text-sm text-gray-600 space-y-2">
+                                <p>The Level 1 DFD decomposes the system into five major processes:</p>
+                                <ul class="list-disc list-inside ml-4">
+                                    <li><strong>1.0 Authenticate User:</strong> Verifies student credentials against the Student Records database.</li>
+                                    <li><strong>2.0 Process Clearance Request:</strong> Stores requests in the Clearance Requests Database for department evaluation.</li>
+                                    <li><strong>3.0 Evaluate Clearance Request:</strong> Departments approve, reject, or provide remarks on the request.</li>
+                                    <li><strong>4.0 Update Clearance Status:</strong> The system records all decisions into the Clearance Status Database.</li>
+                                    <li><strong>5.0 Generate Notification and Certificate:</strong> Outputs real-time feedback to the student and generates the final digital certificate once fully approved.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'timeline',
+                title: 'Project Timeline',
+                icon: 'fa-solid fa-calendar-days',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">3.5 Project Timeline (PERT/Gantt)</h2>
+                        </div>
+                        
+                        <p class="text-gray-600 text-lg mb-8">The development and implementation of SwiftClear followed the Waterfall Model, spanning from <strong>February 5, 2026</strong>, to the <strong>first week of June 2026</strong>.</p>
+                        
+                        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <div class="relative pl-8 space-y-8">
+                                
+                                <div class="timeline-item relative">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                        <h3 class="text-lg font-bold text-gray-800">1. Planning Phase</h3>
+                                        <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">Feb 5 - Feb 15, 2026 (10 days)</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Identifying problems, defining the scope, and determining the technical, economic, and operational feasibility of the system.</p>
+                                </div>
+
+                                <div class="timeline-item relative">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                        <h3 class="text-lg font-bold text-gray-800">2. Analysis Phase</h3>
+                                        <span class="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">Feb 16 - Feb 28, 2026 (13 days)</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Gathering requirements and analyzing system needs to support multiple users including Students, Registrar, Library, College Dean, and Business Office.</p>
+                                </div>
+
+                                <div class="timeline-item relative">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                        <h3 class="text-lg font-bold text-gray-800">3. Design Phase</h3>
+                                        <span class="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Mar 1 - Mar 20, 2026 (20 days)</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Creating system design, UI dashboards, database structure, and process design for handling clearance workflows.</p>
+                                </div>
+
+                                <div class="timeline-item relative">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                        <h3 class="text-lg font-bold text-gray-800">4. Development Phase</h3>
+                                        <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">Mar 21 - May 20, 2026 (61 days)</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Coding the web-based application, integrating modules for different departments, and system implementation.</p>
+                                </div>
+
+                                <div class="timeline-item relative">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-1">
+                                        <h3 class="text-lg font-bold text-gray-800">5. Testing Phase</h3>
+                                        <span class="inline-block px-3 py-1 bg-amber-900 text-white rounded-full text-xs font-semibold">May 21 - Jun 5, 2026 (16 days)</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Debugging, evaluation, error correction, deployment, and providing user guidance.</p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'references',
+                title: 'References',
+                icon: 'fa-solid fa-quote-right',
+                content: `
+                    <div class="fade-in">
+                        <div class="mb-8 border-b-2 border-chmsu-green pb-4 inline-block">
+                            <h2 class="text-3xl font-bold text-gray-800">References</h2>
+                        </div>
+                        
+                        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <ul class="space-y-6 text-gray-600 text-sm md:text-base leading-relaxed pl-4" style="list-style-type: none;">
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Adegoke, T. B., & Olalekan, A. A. (2026). Design and development of a workflow-driven online student clearance system for seamless multi-departmental integration. <em>ISA Journal of Engineering and Technology (ISAJET)</em>, 3 (1).
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Cadiz, L., III, Bondoc, C. N., & Estroga, J. (2017). Moving towards global technological advancement: Basis for the e-clearance program development. <em>International Journal of Computing Academic Research (IJCAR)</em>, 6 (6), 171–179.
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Daud, G. S., & Maguid, M. A. (2022). Secured Cotabato City State Polytechnic College web-based student clearance system. <em>Randwick International of Social Sciences (RISS) Journal</em>, 3 (1), 61–66.
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Essel, D. D., Techie-Menson, H., Oppong, S. O., & Alakuu, A. (2023). Digitalising the clearance processes of higher education institutions through the design and implementation of an online clearance system. <em>International Journal of Scientific Research and Management (IJSRM)</em>, 11 (7), 42–58.
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Eweoya, I. O., Agbeyangi, A. O., & Lukose, J. M. (2025). Streamlining student clearance in higher education: A web-based solution. <em>Information Impact: Journal of Information and Knowledge Management</em>, 16 (1), 47–62.
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Hasan, S. B., Abdullah, Y. N., & Darwesh, M. K. (2023). Design and implementation: The digital transformation of the student clearance system for Soran University. <em>Academic Journal of Nawroz University</em>, 12 (3).
+                                </li>
+                                <li class="relative before:absolute before:-left-4 before:top-2 before:w-2 before:h-2 before:bg-chmsu-green before:rounded-full indent-[-1.5rem] pl-[1.5rem]">
+                                    Macuroy, M. G. L., Miranda, J. P. R., & Galima, M. B. (2023). <em>Online student clearance system</em> [Unpublished bachelor's thesis]. Don Mariano Marcos Memorial State University.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // --- Application Logic ---
+        
+        // Initialize the UI
+        function initApp() {
+            renderNavMenu();
+            // Default load the first section
+            switchSection('cover');
+        }
+
+        // Render Sidebar Links
+        function renderNavMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            navMenu.innerHTML = '';
+            
+            documentSections.forEach(section => {
+                const btn = document.createElement('button');
+                btn.id = `nav-btn-${section.id}`;
+                btn.className = `w-full text-left px-6 py-3 text-sm font-medium transition-colors border-l-4 border-transparent hover:bg-white/10 hover:border-chmsu-gold flex items-center gap-3`;
+                btn.onclick = () => switchSection(section.id);
+                btn.innerHTML = `<i class="${section.icon} w-5 text-center opacity-70"></i> ${section.title}`;
+                navMenu.appendChild(btn);
+            });
+        }
+
+        // Switch displayed section
+        function switchSection(id) {
+            // Update Active Link styling
+            documentSections.forEach(section => {
+                const btn = document.getElementById(`nav-btn-${section.id}`);
+                if (btn) {
+                    if (section.id === id) {
+                        btn.classList.add('bg-white/10', 'border-chmsu-gold', 'text-chmsu-gold');
+                        btn.classList.remove('border-transparent', 'text-white');
+                        btn.querySelector('i').classList.replace('opacity-70', 'opacity-100');
+                    } else {
+                        btn.classList.remove('bg-white/10', 'border-chmsu-gold', 'text-chmsu-gold');
+                        btn.classList.add('border-transparent', 'text-white');
+                        btn.querySelector('i').classList.replace('opacity-100', 'opacity-70');
+                    }
+                }
+            });
+
+            // Find section data and render content
+            const sectionData = documentSections.find(s => s.id === id);
+            if (sectionData) {
+                const container = document.getElementById('content-container');
+                container.innerHTML = sectionData.content;
+                // Scroll to top of content area
+                document.querySelector('main').scrollTop = 0;
+            }
+
+            // Close mobile menu if open
+            if(window.innerWidth < 768) {
+                closeMobileMenu();
+            }
+        }
+
+        // Mobile Menu Toggle Functions
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                // Close
+                closeMobileMenu();
+            }
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+
+        // Run setup when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
